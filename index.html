@@ -1,0 +1,68 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Smart Complaint Box</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
+    form, .admin-panel { max-width: 500px; margin: auto; background: #fff; padding: 1rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+    input, textarea, button { width: 100%; margin: 0.5rem 0; padding: 0.7rem; border: 1px solid #ccc; border-radius: 8px; }
+    button { background-color: #4285F4; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #3367D6; }
+  </style>
+</head>
+<body>
+  <h2>Smart Complaint Box</h2>
+  <form id="complaintForm">
+    <input type="text" id="name" placeholder="Your Name (Optional)" />
+    <textarea id="complaint" placeholder="Write your complaint here..."></textarea>
+    <button type="submit">Submit</button>
+  </form>
+  
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDUuXg9zLhx_Yff03ItxcE5wIdGrUbCVN8",
+      authDomain: "smart-complaint-box-8b946.firebaseapp.com",
+      projectId: "smart-complaint-box-8b946",
+      storageBucket: "smart-complaint-box-8b946.firebasestorage.app",
+      messagingSenderId: "314069861183",
+      appId: "1:314069861183:web:6757ce227e6e631141098a"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const form = document.getElementById("complaintForm");
+
+    async function categorizeComplaint(text) {
+      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_GEMINI_API_KEY", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: `Categorize this complaint: \"${text}\" into one of the following: Maintenance, Cleanliness, Suggestion, Electricity.` }] }]
+        })
+      });
+      const data = await res.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Uncategorized";
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value || "Anonymous";
+      const complaint = document.getElementById("complaint").value;
+      const category = await categorizeComplaint(complaint);
+      await addDoc(collection(db, "complaints"), { name, complaint, category, timestamp: new Date() });
+      alert("Complaint submitted successfully!");
+      form.reset();
+    });
+  </script>
+</body>
+</html>
+
+<!-- Optional: admin.html (Basic View) -->
+<!-- Add later if needed -->
