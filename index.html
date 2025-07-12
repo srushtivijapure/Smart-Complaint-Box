@@ -1,68 +1,480 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Smart Complaint Box</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 2rem; background: #f4f4f4; }
-    form, .admin-panel { max-width: 500px; margin: auto; background: #fff; padding: 1rem; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-    input, textarea, button { width: 100%; margin: 0.5rem 0; padding: 0.7rem; border: 1px solid #ccc; border-radius: 8px; }
-    button { background-color: #4285F4; color: white; border: none; cursor: pointer; }
-    button:hover { background-color: #3367D6; }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Complaint Box - Professional Complaint Management System</title>
+  <meta name="description" content="A modern, intelligent complaint management system with AI-powered categorization and real-time tracking">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+  
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 <body>
-  <h2>Smart Complaint Box</h2>
-  <form id="complaintForm">
-    <input type="text" id="name" placeholder="Your Name (Optional)" />
-    <textarea id="complaint" placeholder="Write your complaint here..."></textarea>
-    <button type="submit">Submit</button>
-  </form>
+  <!-- Loading Spinner -->
+  <div id="loadingSpinner" class="loading-spinner hidden">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-container">
+      <a href="#" class="navbar-brand">
+        <i class="fas fa-comment-dots"></i>
+        Smart Complaint Box
+      </a>
+      
+      <ul class="navbar-menu" id="navbarMenu">
+        <li><a href="#" class="active" onclick="showFormView()">
+          <i class="fas fa-edit"></i> Submit Complaint
+        </a></li>
+        <li><a href="#" onclick="showAdminView()">
+          <i class="fas fa-chart-line"></i> Admin Panel
+        </a></li>
+        <li><a href="#" onclick="showPrivacyPolicy()">
+          <i class="fas fa-shield-alt"></i> Privacy
+        </a></li>
+        <li><a href="#" onclick="showContactInfo()">
+          <i class="fas fa-phone"></i> Contact
+        </a></li>
+      </ul>
+      
+      <button class="navbar-toggle" id="navbarToggle">
+        <i class="fas fa-bars"></i>
+      </button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <!-- Header Section -->
+    <header class="header">
+      <div class="header-content">
+        <h1><i class="fas fa-comment-dots"></i> Smart Complaint Box</h1>
+        <p>Intelligent complaint management with AI-powered categorization and real-time tracking for better community service</p>
+      </div>
+    </header>
+
+    <!-- Complaint Form Section -->
+    <section id="complaintForm" class="card">
+      <div class="form-header">
+        <h2><i class="fas fa-edit"></i> Submit Your Complaint</h2>
+        <p>We're here to help! Please provide details about your concern.</p>
+      </div>
+      
+      <form id="complaintFormElement">
+        <div class="form-group">
+          <label for="name" class="form-label">
+            <i class="fas fa-user"></i> Your Name (Optional)
+          </label>
+          <input 
+            type="text" 
+            id="name" 
+            name="name" 
+            class="form-input" 
+            placeholder="Enter your name or remain anonymous"
+            autocomplete="name"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="email" class="form-label">
+            <i class="fas fa-envelope"></i> Email Address (Optional)
+          </label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            class="form-input" 
+            placeholder="your.email@example.com"
+            autocomplete="email"
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="phone" class="form-label">
+            <i class="fas fa-phone"></i> Phone Number (Optional)
+          </label>
+          <div class="phone-input-group">
+            <span class="phone-prefix">+91</span>
+            <input 
+              type="tel" 
+              id="phone" 
+              name="phone" 
+              class="form-input phone-input" 
+              placeholder="98765 43210"
+              pattern="[0-9]{10}"
+              maxlength="10"
+              autocomplete="tel"
+            >
+          </div>
+          <small class="form-help">Enter 10-digit Indian mobile number</small>
+        </div>
+
+        <div class="form-group">
+          <label for="category" class="form-label">
+            <i class="fas fa-tags"></i> Select Category *
+          </label>
+          <select id="category" name="category" class="form-input" required>
+            <option value="">-- Select a category --</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Cleanliness">Cleanliness</option>
+            <option value="Electricity">Electricity</option>
+            <option value="Suggestion">Suggestion</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        
+
+        <div class="form-group">
+          <label for="complaint" class="form-label">
+            <i class="fas fa-exclamation-triangle"></i> Complaint Details *
+          </label>
+          <textarea 
+            id="complaint" 
+            name="complaint" 
+            class="form-textarea" 
+            placeholder="Please describe your complaint in detail. Be specific about the issue, location, and any relevant information that will help us address your concern effectively."
+            required
+            minlength="10"
+            maxlength="1000"
+          ></textarea>
+          <div class="form-help">
+            <small>Minimum 10 characters, maximum 1000 characters</small>
+            <span class="char-count">0/1000</span>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">
+            <i class="fas fa-paper-plane"></i> Submit Complaint
+          </button>
+          <button type="reset" class="btn btn-secondary">
+            <i class="fas fa-undo"></i> Clear Form
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Admin Panel Section -->
+    <section id="adminPanel" class="admin-panel hidden">
+      <div class="admin-header">
+        <div>
+          <h2><i class="fas fa-chart-line"></i> Admin Dashboard</h2>
+          <p>Manage and track all complaints in real-time</p>
+        </div>
+        <div class="admin-actions">
+          <button class="btn btn-success" onclick="exportComplaints()">
+            <i class="fas fa-download"></i> Export Data
+          </button>
+          <button class="btn btn-warning" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Statistics Grid -->
+      <div id="statsGrid" class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Total Complaints</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Pending</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Resolved</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">0</div>
+          <div class="stat-label">Urgent</div>
+        </div>
+      </div>
+
+      <!-- Filters and Search -->
+      <div class="filters-section">
+        <div class="search-box">
+          <input type="text" id="searchComplaints" class="form-input" placeholder="Search complaints...">
+          <i class="fas fa-search search-icon"></i>
+        </div>
+        <div class="filter-buttons">
+          <button class="btn btn-sm btn-primary active" data-filter="all">All</button>
+          <button class="btn btn-sm btn-warning" data-filter="pending">Pending</button>
+          <button class="btn btn-sm btn-success" data-filter="resolved">Resolved</button>
+          <button class="btn btn-sm btn-danger" data-filter="urgent">Urgent</button>
+        </div>
+      </div>
+
+      <!-- Complaints List -->
+      <div class="complaints-container">
+        <div class="complaints-header">
+          <h3><i class="fas fa-list"></i> Recent Complaints</h3>
+          <div class="sort-options">
+            <select id="sortComplaints" class="form-input">
+              <option value="timestamp-desc">Newest First</option>
+              <option value="timestamp-asc">Oldest First</option>
+              <option value="priority-desc">Priority (High to Low)</option>
+              <option value="priority-asc">Priority (Low to High)</option>
+            </select>
+          </div>
+        </div>
+        
+        <div id="complaintsList" class="complaints-list">
+          <!-- Complaints will be dynamically added here -->
+          <div class="empty-state">
+            <i class="fas fa-inbox"></i>
+            <h4>No complaints yet</h4>
+            <p>Complaints will appear here once submitted</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-content">
+        <p>&copy; 2024 Smart Complaint Box. Built with ❤️ for better community service.</p>
+        <div class="footer-links">
+          <a href="#" onclick="showPrivacyPolicy()">Privacy Policy</a>
+          <a href="#" onclick="showTermsOfService()">Terms of Service</a>
+          <a href="#" onclick="showContactInfo()">Contact Us</a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal for Privacy Policy -->
+  <div id="privacyModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Privacy Policy</h3>
+        <button class="modal-close" onclick="closeModal('privacyModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>Your privacy is important to us. We collect only the information you provide and use it solely for complaint management purposes.</p>
+        <p>We do not share your personal information with third parties without your explicit consent.</p>
+        <p>All data is stored securely in Firebase cloud database with encryption.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Terms of Service -->
+  <div id="termsModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Terms of Service</h3>
+        <button class="modal-close" onclick="closeModal('termsModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p>By using this complaint system, you agree to provide accurate and truthful information.</p>
+        <p>We reserve the right to remove inappropriate or false complaints.</p>
+        <p>This system is designed for legitimate community concerns and feedback.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal for Contact Info -->
+  <div id="contactModal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Contact Information</h3>
+        <button class="modal-close" onclick="closeModal('contactModal')">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="contact-info">
+          <p><i class="fas fa-envelope"></i> Email: support@smartcomplaintbox.com</p>
+          <p><i class="fas fa-phone"></i> Phone: +91 98765 43210</p>
+          <p><i class="fas fa-clock"></i> Hours: Monday - Friday, 9:00 AM - 6:00 PM IST</p>
+          <p><i class="fas fa-map-marker-alt"></i> Address: Mumbai, Maharashtra, India</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom JavaScript -->
+  <script src="main.js"></script>
   
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, collection, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDUuXg9zLhx_Yff03ItxcE5wIdGrUbCVN8",
-      authDomain: "smart-complaint-box-8b946.firebaseapp.com",
-      projectId: "smart-complaint-box-8b946",
-      storageBucket: "smart-complaint-box-8b946.firebasestorage.app",
-      messagingSenderId: "314069861183",
-      appId: "1:314069861183:web:6757ce227e6e631141098a"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    const form = document.getElementById("complaintForm");
-
-    async function categorizeComplaint(text) {
-      const res = await fetch("https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=YOUR_GEMINI_API_KEY", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Categorize this complaint: \"${text}\" into one of the following: Maintenance, Cleanliness, Suggestion, Electricity.` }] }]
-        })
+  <!-- Additional JavaScript for enhanced functionality -->
+  <script>
+    // Mobile menu toggle
+    const navbarToggle = document.getElementById('navbarToggle');
+    const navbarMenu = document.getElementById('navbarMenu');
+    
+    navbarToggle.addEventListener('click', function() {
+      navbarMenu.classList.toggle('active');
+    });
+    
+    // Close mobile menu when clicking on a link
+    document.querySelectorAll('.navbar-menu a').forEach(link => {
+      link.addEventListener('click', function() {
+        navbarMenu.classList.remove('active');
       });
-      const data = await res.json();
-      return data.candidates?.[0]?.content?.parts?.[0]?.text || "Uncategorized";
+    });
+
+    // Character counter for complaint textarea
+    const complaintTextarea = document.getElementById('complaint');
+    const charCount = document.querySelector('.char-count');
+    
+    complaintTextarea.addEventListener('input', function() {
+      const length = this.value.length;
+      charCount.textContent = `${length}/1000`;
+      
+      if (length > 900) {
+        charCount.style.color = '#dc2626';
+      } else if (length > 800) {
+        charCount.style.color = '#f59e0b';
+      } else {
+        charCount.style.color = '#1e40af';
+      }
+    });
+
+    // Phone number validation for Indian format
+    const phoneInput = document.getElementById('phone');
+    phoneInput.addEventListener('input', function() {
+      // Remove any non-digit characters
+      this.value = this.value.replace(/\D/g, '');
+      
+      // Limit to 10 digits
+      if (this.value.length > 10) {
+        this.value = this.value.slice(0, 10);
+      }
+    });
+
+    // Search functionality
+    const searchInput = document.getElementById('searchComplaints');
+    searchInput.addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const complaintItems = document.querySelectorAll('.complaint-item');
+      
+      complaintItems.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(searchTerm)) {
+          item.style.display = 'block';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+    });
+
+    // Filter functionality
+    const filterButtons = document.querySelectorAll('[data-filter]');
+    filterButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove active class from all buttons
+        filterButtons.forEach(btn => btn.classList.remove('active'));
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        const filter = this.dataset.filter;
+        filterComplaints(filter);
+      });
+    });
+
+    function filterComplaints(filter) {
+      const complaintItems = document.querySelectorAll('.complaint-item');
+      
+      complaintItems.forEach(item => {
+        if (filter === 'all') {
+          item.style.display = 'block';
+        } else {
+          const category = item.querySelector('.category-badge').textContent.toLowerCase();
+          const priority = item.querySelector('.priority-badge').textContent.toLowerCase();
+          
+          if (filter === 'pending' && item.querySelector('.status-pending')) {
+            item.style.display = 'block';
+          } else if (filter === 'resolved' && item.querySelector('.status-resolved')) {
+            item.style.display = 'block';
+          } else if (filter === 'urgent' && priority === 'urgent') {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        }
+      });
     }
 
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const name = document.getElementById("name").value || "Anonymous";
-      const complaint = document.getElementById("complaint").value;
-      const category = await categorizeComplaint(complaint);
-      await addDoc(collection(db, "complaints"), { name, complaint, category, timestamp: new Date() });
-      alert("Complaint submitted successfully!");
-      form.reset();
+    // Modal functions
+    function showPrivacyPolicy() {
+      document.getElementById('privacyModal').classList.remove('hidden');
+    }
+
+    function showTermsOfService() {
+      document.getElementById('termsModal').classList.remove('hidden');
+    }
+
+    function showContactInfo() {
+      document.getElementById('contactModal').classList.remove('hidden');
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add('hidden');
+    }
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+      const modals = document.querySelectorAll('.modal');
+      modals.forEach(modal => {
+        if (event.target === modal) {
+          modal.classList.add('hidden');
+        }
+      });
+    });
+
+    // Export functionality
+    function exportComplaints() {
+      const complaints = window.complaints || [];
+      const csvContent = "data:text/csv;charset=utf-8," 
+        + "Name,Email,Phone,Complaint,Category,Priority,Status,Timestamp\n"
+        + complaints.map(c => 
+          `"${c.name}","${c.email}","${c.phone}","${c.complaint}","${c.category}","${c.priority}","${c.status}","${c.timestamp}"`
+        ).join("\n");
+      
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "complaints_export.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Refresh data
+    function refreshData() {
+      location.reload();
+    }
+
+    // Add smooth scrolling
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
     });
   </script>
 </body>
 </html>
-
-<!-- Optional: admin.html (Basic View) -->
-<!-- Add later if needed -->
